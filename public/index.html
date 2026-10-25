@@ -1,66 +1,501 @@
 <!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
-		/>
-		<title>Scramjet</title>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obscura</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M4 32Q32 6 60 32Q32 58 4 32Z' fill='%23f4f4f4'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23000'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<script>
+/* Apply the saved theme before first paint (dark is the default) */
+(function(){
+  var t = "dark";
+  try { if (localStorage.getItem("obscura-theme") === "light") t = "light"; } catch (e) {}
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
+<style>
+:root{
+  --bg:#000; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.16); --text:#f4f4f4; --muted:#8c8c8c; --gold:#f4f4f4; --iris:#fff;
+  --on-accent:#000; --menu-bg:rgba(10,10,10,.92); --vignette:rgba(0,0,0,.88); --eye-glow:rgba(255,255,255,.16);
+  --display:"Syne","Trebuchet MS",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+:root[data-theme="light"]{
+  --bg:#f5f5f2; --surface:rgba(0,0,0,.05); --line:rgba(0,0,0,.16); --text:#111; --muted:#666; --gold:#111; --iris:#000;
+  --on-accent:#fff; --menu-bg:rgba(250,250,247,.95); --vignette:rgba(245,245,242,.88); --eye-glow:rgba(0,0,0,.14);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);display:grid;place-items:center;overflow:hidden;transition:background-color .2s,color .2s}
+#wall{position:fixed;inset:0;z-index:0}
+body::before{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 75% 65% at 50% 45%,transparent 30%,var(--vignette) 100%)}
+body::after{content:"";position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.07;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain 1.2s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-5%)}60%{transform:translate(-5%,-2%)}80%{transform:translate(4%,4%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){body::after{animation:none}}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
-		<link rel="shortcut icon" content="favicon.webp" />
-	
-		<script src="/scram/scramjet.all.js"></script>
-		<script src="/baremux/index.js"></script>
-		
-		<link rel="stylesheet" href="index.css" />
-		<script src="register-sw.js" defer></script>
-		<script src="search.js" defer></script>
-		<script src="index.js" defer></script>
-	</head>
+/* top-right controls on the home screen */
+.corner{position:fixed;top:14px;right:14px;z-index:3;display:flex;gap:8px}
+.round{width:42px;height:42px;display:grid;place-items:center;background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:50%;cursor:pointer;transition:border-color .15s,transform .15s}
+.round:hover{border-color:var(--iris);transform:translateY(-1px)}
+.round svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sun,.fs-off{display:none}
+:root[data-theme="light"] .sun{display:block}
+:root[data-theme="light"] .moon{display:none}
+:root[data-fs="on"] .fs-on{display:none}
+:root[data-fs="on"] .fs-off{display:block}
 
-	<body>
-		<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
-			<img class="logo" src="sj.png" alt="Scramjet" />
-			<h1>Scramjet | MW</h1>
-		</div>
-		<div class="flex-center desc left-margin">
-			<p>
-				Scramjet is an experimental interception based web proxy designed to
-				evade internet censorship, bypass arbitrary web browser restrictions and
-				innovate web proxy technologies.
-			</p>
-		</div>
+main{position:relative;z-index:2;width:min(560px,92vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:24px 0}
+.eye{width:min(260px,62vw);height:auto;display:block;filter:drop-shadow(0 0 28px var(--eye-glow))}
+.eye .outline{stroke:var(--text)}
+h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,9vw,3.6rem);letter-spacing:.14em;padding-left:.14em}
 
-		<form id="sj-form" class="flex-center">
-			<input
-				id="sj-search-engine"
-				value="https://www.google.com/search?q=%s"
-				type="hidden"
-			/>
-			<input id="sj-address" type="text" placeholder="Search the web freely" />
-		</form>
-		<div class="desc left-margin">
-			<p id="sj-error"></p>
-			<pre id="sj-error-code"></pre>
-		</div>
-		<footer>
-			<div>
-				<a
-					title="The Mercury Workshop GitHub organization"
-					href="https://github.com/MercuryWorkshop"
-					>Mercury Workshop</a
-				>
-				<a
-					title="The example demo app for Scramjet"
-					href="https://github.com/MercuryWorkshop/Scramjet-Demo"
-					>GitHub</a
-				>
-				<a title="License information" href="credits.html">Credits</a>
-			</div>
-			<div>
-				<span>Scramjet &copy; MW 2025</span>
-			</div>
-		</footer>
-	</body>
+form.search{width:100%;display:flex;background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;padding:6px;transition:border-color .15s}
+form.search:focus-within{border-color:var(--gold)}
+form.search input{flex:1;min-width:0;background:none;border:0;outline:0;padding:12px 18px;font-size:1rem}
+form.search input::placeholder{color:var(--muted)}
+form.search button{border:0;background:var(--gold);color:var(--on-accent);font-weight:600;border-radius:999px;padding:0 22px;cursor:pointer}
+
+.shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,112px));justify-content:center;gap:14px;margin-top:6px;width:100%}
+.tile-wrap{position:relative}
+.tile{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;cursor:pointer;transition:border-color .15s,transform .15s}
+.tile:hover{border-color:var(--iris);transform:translateY(-2px)}
+.tile svg{width:30px;height:30px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile span{font-size:.92rem;color:var(--muted)}
+
+.menu{position:absolute;top:calc(100% + 10px);left:0;min-width:200px;background:var(--menu-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:6px;display:none;z-index:5}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:10px 12px;cursor:pointer}
+.menu button:hover{background:var(--line)}
+
+/* viewer */
+.viewer{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10}
+.viewer.on{display:flex}
+
+.tabs{display:flex;align-items:flex-end;gap:4px;padding:6px 8px 0;background:var(--surface);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+#tabList{display:flex;gap:4px;min-width:0}
+.tab{flex:0 1 190px;min-width:96px;display:flex;align-items:center;gap:6px;padding:8px 6px 8px 12px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;cursor:pointer;font-size:.85rem;color:var(--muted);user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg);color:var(--text)}
+.tab .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab .x{flex:none;width:22px;height:22px;display:grid;place-items:center;border:0;background:none;border-radius:6px;cursor:pointer;font-size:1rem;line-height:1;color:inherit}
+.tab .x:hover{background:var(--line)}
+.addtab{flex:none;width:32px;height:32px;margin-bottom:2px;display:grid;place-items:center;border:0;background:none;border-radius:8px;cursor:pointer;font-size:1.2rem;color:var(--muted)}
+.addtab:hover{background:var(--line);color:var(--text)}
+
+.bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar button{flex:none;width:38px;height:38px;display:grid;place-items:center;background:none;border:1px solid transparent;border-radius:10px;cursor:pointer}
+.bar button:hover{border-color:var(--line)}
+.bar svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bar input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:.9rem}
+.stage{position:relative;flex:1}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:none}
+.stage iframe.active{display:block}
+.notice{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--muted);background:var(--bg)}
+.notice.on{display:grid}
+.notice p{max-width:42ch;line-height:1.55;margin:0}
+</style>
+</head>
+<body>
+
+<canvas id="wall" aria-hidden="true"></canvas>
+
+<div class="corner">
+  <button class="round" type="button" data-action="blank" aria-label="Open in an about:blank tab" title="Open in about:blank">
+    <svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+  </button>
+  <button class="round" type="button" data-action="fs" aria-label="Toggle full screen" title="Full screen">
+    <svg class="fs-on" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    <svg class="fs-off" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+  </button>
+  <button class="round" id="themeBtn" type="button" aria-label="Switch to light theme" title="Switch theme">
+    <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+</div>
+
+<main id="home">
+  <svg class="eye" id="eye" viewBox="0 0 240 140" role="img" aria-label="Obscura eye logo">
+    <defs>
+      <clipPath id="almond"><path d="M8 70Q120 -14 232 70Q120 154 8 70Z"/></clipPath>
+      <radialGradient id="irisFill" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#9a9a9a"/><stop offset="1" stop-color="#1c1c1c"/>
+      </radialGradient>
+    </defs>
+    <path d="M8 70Q120 -14 232 70Q120 154 8 70Z" fill="#050505"/>
+    <g clip-path="url(#almond)">
+      <g id="gaze">
+        <circle cx="120" cy="70" r="40" fill="url(#irisFill)"/>
+        <circle cx="120" cy="70" r="40" fill="none" stroke="#000" stroke-width="3"/>
+        <circle cx="120" cy="70" r="17" fill="#000"/>
+        <circle cx="130" cy="59" r="5" fill="#fff" opacity=".9"/>
+      </g>
+      <path d="M8 70Q120 -14 232 70" fill="none" stroke="#000" stroke-width="16" opacity=".6"/>
+    </g>
+    <path class="outline" d="M8 70Q120 -14 232 70Q120 154 8 70Z" fill="none" stroke-width="3" stroke-linejoin="round"/>
+  </svg>
+
+  <h1>OBSCURA</h1>
+
+  <form class="search" id="searchForm" autocomplete="off">
+    <input id="q" type="text" placeholder="Search or enter a web address" aria-label="Search or enter a web address" autofocus>
+    <button type="submit">Go</button>
+  </form>
+
+  <div class="shortcuts">
+    <div class="tile-wrap">
+      <button class="tile" id="moviesBtn" type="button" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M7 7l-2-4M12 7l-2-4M17 7l-2-4"/></svg>
+        <span>Movies</span>
+      </button>
+      <div class="menu" id="moviesMenu" role="menu"></div>
+    </div>
+
+    <div class="tile-wrap">
+      <button class="tile" id="gamesBtn" type="button">
+        <svg viewBox="0 0 24 24"><path d="M6.5 8h11a4.5 4.5 0 0 1 4.4 5.4l-.8 4a2.4 2.4 0 0 1-4 1.3L14 16.5h-4l-3.1 2.2a2.4 2.4 0 0 1-4-1.3l-.8-4A4.5 4.5 0 0 1 6.5 8z"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="15.5" cy="11.5" r=".6"/><circle cx="17.5" cy="13.5" r=".6"/></svg>
+        <span>Games</span>
+      </button>
+    </div>
+
+    <div class="tile-wrap">
+      <button class="tile" type="button" data-link="youtube">
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l6 3-6 3z"/></svg>
+        <span>YouTube</span>
+      </button>
+    </div>
+
+    <div class="tile-wrap">
+      <button class="tile" type="button" data-link="tiktok">
+        <svg viewBox="0 0 24 24"><path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5M14 4c.4 2.4 2 4 4.5 4.2"/></svg>
+        <span>TikTok</span>
+      </button>
+    </div>
+
+    <div class="tile-wrap">
+      <button class="tile" type="button" data-link="roblox">
+        <svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" transform="rotate(15 12 12)"/><rect x="10.5" y="10.5" width="3" height="3" transform="rotate(15 12 12)"/></svg>
+        <span>Roblox</span>
+      </button>
+    </div>
+
+    <div class="tile-wrap">
+      <button class="tile" type="button" data-link="cloud">
+        <svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9H7z"/><path d="M8.5 13.5h3M10 12v3"/><circle cx="14.5" cy="13.5" r=".6"/></svg>
+        <span>Cloud Gaming</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+<section class="viewer" id="viewer" aria-label="Browsing">
+  <div class="tabs">
+    <div id="tabList" role="tablist" aria-label="Open tabs"></div>
+    <button class="addtab" id="addTabBtn" type="button" aria-label="New tab" title="New tab">+</button>
+  </div>
+  <div class="bar">
+    <button id="homeBtn" type="button" aria-label="Back to Obscura" title="Home"><svg viewBox="0 0 24 24"><path d="M2 12Q12 3 22 12Q12 21 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button id="reloadBtn" type="button" aria-label="Reload" title="Reload"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5"/></svg></button>
+    <input id="addr" type="text" aria-label="Address" placeholder="Search or enter a web address">
+    <button type="button" data-action="blank" aria-label="Open in an about:blank tab" title="Open in about:blank"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
+    <button type="button" data-action="fs" aria-label="Toggle full screen" title="Full screen">
+      <svg class="fs-on" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <svg class="fs-off" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+    </button>
+  </div>
+  <div class="stage" id="stage">
+    <div class="notice" id="blank"><p>New tab. Type a search or web address above.</p></div>
+    <div class="notice" id="notice"><p>The proxy isn't connected. Serve this page from your Scramjet app so its scripts load, then hook up <code>navigate()</code> in this file.</p></div>
+  </div>
+</section>
+
+<script src="/baremux/index.js"></script>
+<script src="/scram/scramjet.all.js"></script>
+<script>
+(async () => {
+  const { ScramjetController } = $scramjetLoadController();
+  const sj = new ScramjetController({
+    files: {
+      wasm: "/scram/scramjet.wasm.wasm",
+      all:  "/scram/scramjet.all.js",
+      sync: "/scram/scramjet.sync.js"
+    }
+  });
+  await sj.init();
+  await navigator.serviceWorker.register("/sw.js");
+  const wisp = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+  const conn = new BareMux.BareMuxConnection("/baremux/worker.js");
+  await conn.setTransport("/libcurl/index.mjs", [{ wisp }]);
+  window.scramjet = sj;
+})();
+</script>
+
+<script>
+/* ---- Edit these ---- */
+const MOVIES = [
+  { name: "Soap2Day", url: "https://soap2day.day" },
+  { name: "OnlyFlix", url: "https://onlyflix.to" }
+];
+const GAMES_URL = "https://sites.google.com/view/classroom6x/";
+const SEARCH_URL = "https://duckduckgo.com/?q=";
+const LINKS = {
+  youtube: "https://www.youtube.com",
+  tiktok:  "https://www.tiktok.com",
+  roblox:  "https://now.gg/apps/roblox-corporation/5349/roblox.html", /* the Roblox button opens now.gg */
+  cloud:   "https://play.geforcenow.com/mall/"
+};
+
+const $ = id => document.getElementById(id);
+
+/* ---- Tabs ----
+   Every tab has its own iframe and its own Scramjet frame.
+   Match navigate() to how your Scramjet-App's index.js sets things up.
+   It expects a global `scramjet` controller (window.scramjet). */
+let tabs = [], activeId = null, nextId = 1;
+
+const getTab = id => tabs.find(t => t.id === id);
+function hostOf(url){
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return url; }
+}
+
+function createTab(){
+  const iframe = document.createElement("iframe");
+  iframe.title = "Proxied page";
+  iframe.setAttribute("allow", "fullscreen; autoplay");
+  $("stage").insertBefore(iframe, $("blank"));
+  const tab = { id: nextId++, iframe, frame: null, url: "", title: "New tab", failed: false };
+  tabs.push(tab);
+  switchTab(tab.id);
+  return tab;
+}
+
+function navigate(tab, url){
+  tab.url = url;
+  tab.title = hostOf(url);
+  tab.failed = false;
+  const sj = window.scramjet;
+  if (sj && typeof sj.createFrame === "function") {
+    if (!tab.frame) tab.frame = sj.createFrame(tab.iframe);
+    tab.frame.go(url);
+  } else if (sj && typeof sj.encodeUrl === "function") {
+    tab.iframe.src = sj.encodeUrl(url);
+  } else {
+    tab.failed = true;
+  }
+  renderTabs();
+  updateStage();
+}
+
+function switchTab(id){
+  activeId = id;
+  renderTabs();
+  updateStage();
+  const t = getTab(id);
+  if (t && !t.url && $("viewer").classList.contains("on")) $("addr").focus();
+}
+
+function closeTab(id){
+  const i = tabs.findIndex(t => t.id === id);
+  if (i < 0) return;
+  tabs[i].iframe.remove();
+  tabs.splice(i, 1);
+  if (!tabs.length) { activeId = null; renderTabs(); updateStage(); goHome(); return; }
+  if (id === activeId) switchTab(tabs[Math.min(i, tabs.length - 1)].id);
+  else renderTabs();
+}
+
+function renderTabs(){
+  const list = $("tabList");
+  list.textContent = "";
+  tabs.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "tab" + (t.id === activeId ? " active" : "");
+    el.setAttribute("role", "tab");
+    el.setAttribute("aria-selected", String(t.id === activeId));
+    el.tabIndex = 0;
+    const label = document.createElement("span");
+    label.className = "t"; label.textContent = t.title;
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "x"; x.textContent = "\u00d7"; x.setAttribute("aria-label", "Close tab");
+    x.addEventListener("click", e => { e.stopPropagation(); closeTab(t.id); });
+    el.append(label, x);
+    el.addEventListener("click", () => switchTab(t.id));
+    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); switchTab(t.id); } });
+    el.addEventListener("auxclick", e => { if (e.button === 1) { e.preventDefault(); closeTab(t.id); } });
+    list.appendChild(el);
+  });
+}
+
+function updateStage(){
+  const active = getTab(activeId);
+  tabs.forEach(t => t.iframe.classList.toggle("active", t === active && !!t.url && !t.failed));
+  $("blank").classList.toggle("on", !!active && !active.url);
+  $("notice").classList.toggle("on", !!active && active.failed);
+  $("addr").value = active ? active.url : "";
+}
+
+/* Open a URL. From the home screen it gets its own tab (a blank tab is reused);
+   from the address bar it loads in the current tab. */
+function openUrl(url, inNewTab){
+  $("viewer").classList.add("on");
+  let tab = getTab(activeId);
+  if (!tab || (inNewTab && tab.url)) tab = createTab();
+  navigate(tab, url);
+}
+
+/* ---- UI ---- */
+function toUrl(text){
+  const t = text.trim();
+  if (!t) return null;
+  if (/^https?:\/\//i.test(t)) return t;
+  if (/^[^\s\/]+\.[a-z]{2,}(\/\S*)?$/i.test(t)) return "https://" + t;
+  return SEARCH_URL + encodeURIComponent(t);
+}
+function goHome(){
+  $("viewer").classList.remove("on");
+  $("q").value = "";
+}
+
+$("searchForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const url = toUrl($("q").value);
+  if (url) openUrl(url, true);
+});
+$("addr").addEventListener("keydown", e => {
+  if (e.key === "Enter") { const url = toUrl($("addr").value); if (url) openUrl(url, false); }
+});
+$("homeBtn").addEventListener("click", goHome);
+$("reloadBtn").addEventListener("click", () => { const t = getTab(activeId); if (t && t.url) navigate(t, t.url); });
+$("addTabBtn").addEventListener("click", () => { $("viewer").classList.add("on"); createTab(); });
+$("gamesBtn").addEventListener("click", () => openUrl(GAMES_URL, true));
+document.querySelectorAll("[data-link]").forEach(b => {
+  b.addEventListener("click", () => openUrl(LINKS[b.dataset.link], true));
+});
+
+const menu = $("moviesMenu"), moviesBtn = $("moviesBtn");
+MOVIES.forEach(m => {
+  const b = document.createElement("button");
+  b.type = "button"; b.setAttribute("role", "menuitem"); b.textContent = m.name;
+  b.addEventListener("click", () => { closeMenu(); openUrl(m.url, true); });
+  menu.appendChild(b);
+});
+function closeMenu(){ menu.classList.remove("open"); moviesBtn.setAttribute("aria-expanded", "false"); }
+moviesBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  const open = menu.classList.toggle("open");
+  moviesBtn.setAttribute("aria-expanded", String(open));
+});
+document.addEventListener("click", closeMenu);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
+
+/* Full screen */
+const canFs = !!document.documentElement.requestFullscreen;
+function toggleFs(){
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+document.addEventListener("fullscreenchange", () => {
+  document.documentElement.setAttribute("data-fs", document.fullscreenElement ? "on" : "off");
+});
+
+/* Open this page inside an about:blank tab */
+function openBlank(){
+  const w = window.open("about:blank", "_blank");
+  if (!w) { alert("Your browser blocked the pop-up. Allow pop-ups for this site and try again."); return; }
+  const d = w.document;
+  d.open();
+  d.write('<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style></head><body></body></html>');
+  d.close();
+  const f = d.createElement("iframe");
+  f.src = location.href;
+  f.setAttribute("allow", "fullscreen; autoplay");
+  d.body.appendChild(f);
+}
+
+document.querySelectorAll('[data-action="fs"]').forEach(b => {
+  if (!canFs) b.hidden = true;
+  b.addEventListener("click", toggleFs);
+});
+document.querySelectorAll('[data-action="blank"]').forEach(b => {
+  if (window.self !== window.top) b.hidden = true; /* already inside a frame */
+  b.addEventListener("click", openBlank);
+});
+
+/* Theme: dark by default, saved between visits */
+const isLight = () => document.documentElement.getAttribute("data-theme") === "light";
+function syncThemeBtn(){
+  $("themeBtn").setAttribute("aria-label", isLight() ? "Switch to dark theme" : "Switch to light theme");
+}
+$("themeBtn").addEventListener("click", () => {
+  const next = isLight() ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("obscura-theme", next); } catch (e) {}
+  syncThemeBtn();
+  if (still) wallFrame(0);
+});
+syncThemeBtn();
+
+/* The eye follows the pointer */
+const eye = $("eye"), gaze = $("gaze");
+document.addEventListener("pointermove", e => {
+  const r = eye.getBoundingClientRect();
+  const dx = e.clientX - (r.left + r.width / 2);
+  const dy = e.clientY - (r.top + r.height / 2);
+  const d = Math.hypot(dx, dy) || 1;
+  const k = Math.min(1, d / 220);
+  gaze.setAttribute("transform", `translate(${(dx / d) * 30 * k} ${(dy / d) * 14 * k})`);
+});
+
+/* Living wallpaper: drifting mist and dust that drifts away from the pointer */
+const cv = $("wall"), cx = cv.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let W, H, DPR, mx = .5, my = .5, pts = [];
+function sizeWall(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = cv.width = innerWidth * DPR; H = cv.height = innerHeight * DPR;
+  const n = Math.round(innerWidth * innerHeight / 12000);
+  pts = Array.from({ length: n }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - .5) * .18 * DPR, vy: (Math.random() - .5) * .18 * DPR - .06 * DPR,
+    r: (Math.random() * 1.2 + .3) * DPR, a: Math.random() * .5 + .15, t: Math.random() * 6.28
+  }));
+}
+function wallFrame(ms){
+  const t = ms * .0001;
+  const light = isLight();
+  const bgFill = light ? "#f5f5f2" : "#000";
+  const ink = light ? "0,0,0" : "255,255,255";
+  const mist = light ? .07 : .075;
+  cx.fillStyle = bgFill; cx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 5; i++){
+    const x = W * (.5 + .38 * Math.sin(t * 1.3 + i * 1.9) + (mx - .5) * .08 * (i + 1));
+    const y = H * (.5 + .34 * Math.cos(t * 1.1 + i * 2.4) + (my - .5) * .08 * (i + 1));
+    const r = Math.max(W, H) * (.28 + .08 * Math.sin(t * 2 + i));
+    const g = cx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${ink},${mist})`); g.addColorStop(1, `rgba(${ink},0)`);
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+  }
+  const px = mx * W, py = my * H, R = 170 * DPR;
+  for (const p of pts){
+    const dx = p.x - px, dy = p.y - py, d = Math.hypot(dx, dy);
+    if (d < R && d > 0){ const f = (1 - d / R) * .7 * DPR; p.x += dx / d * f; p.y += dy / d * f; }
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; else if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; else if (p.y > H) p.y = 0;
+    cx.fillStyle = `rgba(${ink},${p.a * (.6 + .4 * Math.sin(t * 40 + p.t))})`;
+    cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.283); cx.fill();
+  }
+  if (!still) requestAnimationFrame(wallFrame);
+}
+addEventListener("resize", () => { sizeWall(); if (still) wallFrame(0); });
+document.addEventListener("pointermove", e => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; });
+sizeWall(); requestAnimationFrame(wallFrame);
+</script>
+</body>
 </html>
