@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Obscura</title>
+<title>Eye of Obscura</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M4 32Q32 6 60 32Q32 58 4 32Z' fill='%23f4f4f4'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23000'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,7 +53,10 @@ button,input{font:inherit;color:inherit}
 main{position:relative;z-index:2;width:min(560px,92vw);display:flex;flex-direction:column;align-items:center;gap:22px;padding:24px 0}
 .eye{width:min(260px,62vw);height:auto;display:block;filter:drop-shadow(0 0 28px var(--eye-glow))}
 .eye .outline{stroke:var(--text)}
-h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,9vw,3.6rem);letter-spacing:.14em;padding-left:.14em}
+h1 .of{display:block;font-size:.34em;letter-spacing:.5em;padding-left:.5em;margin-bottom:.35em;color:var(--muted);font-weight:700}
+h1{margin:0;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,9vw,3.6rem);letter-spacing:.14em;padding-left:.14em}
+
+.motto{margin:-6px 0 0;font-size:1.05rem;letter-spacing:.1em;color:var(--muted);text-align:center}
 
 form.search{width:100%;display:flex;background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;padding:6px;transition:border-color .15s}
 form.search:focus-within{border-color:var(--gold)}
@@ -100,11 +103,16 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 .notice{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--muted);background:var(--bg)}
 .notice.on{display:grid}
 .notice p{max-width:42ch;line-height:1.55;margin:0}
+.blankwrap{display:flex;flex-direction:column;align-items:center;gap:26px}
+.blankeye{width:min(220px,52vw)}
+.cloakbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;max-width:90vw;padding:12px 22px;background:var(--menu-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--iris);border-radius:999px;font-size:.92rem;text-align:center}
 </style>
 </head>
 <body>
 
 <canvas id="wall" aria-hidden="true"></canvas>
+
+<div class="cloakbar" id="cloakBar" hidden>Click anywhere to open Eye of Obscura in about:blank</div>
 
 <div class="corner">
   <button class="round" type="button" data-action="blank" aria-label="Open in an about:blank tab" title="Open in about:blank">
@@ -121,7 +129,7 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 </div>
 
 <main id="home">
-  <svg class="eye" id="eye" viewBox="0 0 240 140" role="img" aria-label="Obscura eye logo">
+  <svg class="eye" id="eye" viewBox="0 0 240 140" role="img" aria-label="Eye of Obscura logo">
     <defs>
       <clipPath id="almond"><path d="M8 70Q120 -14 232 70Q120 154 8 70Z"/></clipPath>
       <radialGradient id="irisFill" cx="50%" cy="50%" r="50%">
@@ -141,7 +149,8 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
     <path class="outline" d="M8 70Q120 -14 232 70Q120 154 8 70Z" fill="none" stroke-width="3" stroke-linejoin="round"/>
   </svg>
 
-  <h1>OBSCURA</h1>
+  <h1><span class="of">EYE OF</span>OBSCURA</h1>
+  <p class="motto">Browse beyond the walls.</p>
 
   <form class="search" id="searchForm" autocomplete="off">
     <input id="q" type="text" placeholder="Search or enter a web address" aria-label="Search or enter a web address" autofocus>
@@ -200,7 +209,7 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
     <button class="addtab" id="addTabBtn" type="button" aria-label="New tab" title="New tab">+</button>
   </div>
   <div class="bar">
-    <button id="homeBtn" type="button" aria-label="Back to Obscura" title="Home"><svg viewBox="0 0 24 24"><path d="M2 12Q12 3 22 12Q12 21 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button id="homeBtn" type="button" aria-label="Back to Eye of Obscura" title="Home"><svg viewBox="0 0 24 24"><path d="M2 12Q12 3 22 12Q12 21 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <button id="reloadBtn" type="button" aria-label="Reload" title="Reload"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5"/></svg></button>
     <input id="addr" type="text" aria-label="Address" placeholder="Search or enter a web address">
     <button type="button" data-action="blank" aria-label="Open in an about:blank tab" title="Open in about:blank"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
@@ -210,7 +219,30 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
     </button>
   </div>
   <div class="stage" id="stage">
-    <div class="notice" id="blank"><p>New tab. Type a search or web address above.</p></div>
+    <div class="notice" id="blank">
+      <div class="blankwrap">
+      <svg class="eye blankeye" id="eye2" viewBox="0 0 240 140" role="img" aria-label="Eye of Obscura logo">
+        <defs>
+          <clipPath id="almond2"><path d="M8 70Q120 -14 232 70Q120 154 8 70Z"/></clipPath>
+          <radialGradient id="irisFill2" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#9a9a9a"/><stop offset="1" stop-color="#1c1c1c"/>
+          </radialGradient>
+        </defs>
+        <path d="M8 70Q120 -14 232 70Q120 154 8 70Z" fill="#050505"/>
+        <g clip-path="url(#almond2)">
+          <g id="gaze2">
+            <circle cx="120" cy="70" r="40" fill="url(#irisFill2)"/>
+            <circle cx="120" cy="70" r="40" fill="none" stroke="#000" stroke-width="3"/>
+            <circle cx="120" cy="70" r="17" fill="#000"/>
+            <circle cx="130" cy="59" r="5" fill="#fff" opacity=".9"/>
+          </g>
+          <path d="M8 70Q120 -14 232 70" fill="none" stroke="#000" stroke-width="16" opacity=".6"/>
+        </g>
+        <path class="outline" d="M8 70Q120 -14 232 70Q120 154 8 70Z" fill="none" stroke-width="3" stroke-linejoin="round"/>
+      </svg>
+      <p>New tab. Type a search or web address above.</p>
+      </div>
+    </div>
     <div class="notice" id="notice"><p>The proxy isn't connected. Serve this page from your Scramjet app so its scripts load, then hook up <code>navigate()</code> in this file.</p></div>
   </div>
 </section>
@@ -406,8 +438,9 @@ document.addEventListener("fullscreenchange", () => {
 
 /* Open this page inside an about:blank tab */
 function openBlank(){
-  const w = window.open("about:blank", "_blank");
-  if (!w) { alert("Your browser blocked the pop-up. Allow pop-ups for this site and try again."); return; }
+  const w = window.open("", "obscura-cloak");
+  if (!w) return false;
+  try { w.focus(); } catch (e) {}
   const d = w.document;
   d.open();
   d.write('<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style></head><body></body></html>');
@@ -416,6 +449,28 @@ function openBlank(){
   f.src = location.href;
   f.setAttribute("allow", "fullscreen; autoplay");
   d.body.appendChild(f);
+  return true;
+}
+
+/* Auto-open in about:blank every time this page loads or reloads.
+   Set AUTO_CLOAK to false to turn it off. Add ?nocloak to the address to skip it once. */
+const AUTO_CLOAK = true;
+function autoCloak(){
+  if (!AUTO_CLOAK || window.self !== window.top) return;
+  if (/[?&]nocloak\b/.test(location.search)) return;
+  if (openBlank()) return;
+  /* The browser blocked it, so the first click or key press opens it instead */
+  const bar = document.getElementById("cloakBar");
+  bar.hidden = false;
+  function go(e){
+    if (!openBlank()) return;
+    bar.hidden = true;
+    removeEventListener("click", go, true);
+    removeEventListener("keydown", go, true);
+    if (e.type === "click") { e.preventDefault(); e.stopPropagation(); }
+  }
+  addEventListener("click", go, true);
+  addEventListener("keydown", go, true);
 }
 
 document.querySelectorAll('[data-action="fs"]').forEach(b => {
@@ -424,7 +479,9 @@ document.querySelectorAll('[data-action="fs"]').forEach(b => {
 });
 document.querySelectorAll('[data-action="blank"]').forEach(b => {
   if (window.self !== window.top) b.hidden = true; /* already inside a frame */
-  b.addEventListener("click", openBlank);
+  b.addEventListener("click", () => {
+    if (!openBlank()) alert("Your browser blocked the pop-up. Allow pop-ups for this site and try again.");
+  });
 });
 
 /* Theme: dark by default, saved between visits */
@@ -450,6 +507,17 @@ document.addEventListener("pointermove", e => {
   const d = Math.hypot(dx, dy) || 1;
   const k = Math.min(1, d / 220);
   gaze.setAttribute("transform", `translate(${(dx / d) * 30 * k} ${(dy / d) * 14 * k})`);
+});
+
+const eye2 = $("eye2"), gaze2 = $("gaze2");
+document.addEventListener("pointermove", e => {
+  const r = eye2.getBoundingClientRect();
+  if (!r.width) return;
+  const dx = e.clientX - (r.left + r.width / 2);
+  const dy = e.clientY - (r.top + r.height / 2);
+  const d = Math.hypot(dx, dy) || 1;
+  const k = Math.min(1, d / 220);
+  gaze2.setAttribute("transform", `translate(${(dx / d) * 30 * k} ${(dy / d) * 14 * k})`);
 });
 
 /* Living wallpaper: drifting mist and dust that drifts away from the pointer */
@@ -496,6 +564,7 @@ function wallFrame(ms){
 addEventListener("resize", () => { sizeWall(); if (still) wallFrame(0); });
 document.addEventListener("pointermove", e => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; });
 sizeWall(); requestAnimationFrame(wallFrame);
+autoCloak();
 </script>
 </body>
 </html>
