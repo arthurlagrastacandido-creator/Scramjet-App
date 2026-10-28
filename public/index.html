@@ -16,6 +16,28 @@
   document.documentElement.setAttribute("data-theme", t);
 })();
 </script>
+<script>
+/* Opens Eye of Obscura inside an about:blank tab. It runs first thing, before the page
+   draws, so the tab opens as fast as the browser allows. Set AUTO_CLOAK to false to turn it off.
+   Add ?nocloak to the address to skip it once. */
+var AUTO_CLOAK = true;
+function openBlank(){
+  var w = window.open("", "obscura-cloak");
+  if (!w) return false;
+  try { w.focus(); } catch (e) {}
+  var d = w.document;
+  d.open();
+  d.write('<!doctype html><html><head><meta charset="utf-8"><title></title><style>html,body{margin:0;height:100%;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style></head><body></body></html>');
+  d.close();
+  var f = d.createElement("iframe");
+  f.src = location.href;
+  f.setAttribute("allow", "fullscreen; autoplay");
+  d.body.appendChild(f);
+  return true;
+}
+window.__cloaked = null; /* true = opened, false = the browser blocked it, null = not tried */
+if (AUTO_CLOAK && window.self === window.top && !/[?&]nocloak\b/.test(location.search)) window.__cloaked = openBlank();
+</script>
 <style>
 :root{
   --bg:#000; --surface:rgba(255,255,255,.05); --line:rgba(255,255,255,.16); --text:#f4f4f4; --muted:#8c8c8c; --gold:#f4f4f4; --iris:#fff;
@@ -73,6 +95,7 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 
 .menu{position:absolute;top:calc(100% + 10px);left:0;min-width:200px;background:var(--menu-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:6px;display:none;z-index:5}
 .menu.open{display:block}
+.menu.up{top:auto;bottom:calc(100% + 10px)}
 .menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:10px 12px;cursor:pointer}
 .menu button:hover{background:var(--line)}
 
@@ -105,14 +128,18 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 .notice p{max-width:42ch;line-height:1.55;margin:0}
 .blankwrap{display:flex;flex-direction:column;align-items:center;gap:26px}
 .blankeye{width:min(220px,52vw)}
-.cloakbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;max-width:90vw;padding:12px 22px;background:var(--menu-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--iris);border-radius:999px;font-size:.92rem;text-align:center}
+.progress{position:absolute;left:0;top:0;height:3px;width:0;background:var(--gold);opacity:0;pointer-events:none;z-index:4}
+.progress.on{opacity:1;animation:load 9s cubic-bezier(.1,.7,.2,1) forwards}
+@keyframes load{from{width:6%}to{width:93%}}
+@media (prefers-reduced-motion:reduce){.progress.on{animation:none;width:60%}}
+.cloakbar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;max-width:90vw;padding:12px 22px;background:var(--menu-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--iris);border-radius:18px;line-height:1.45;font-size:.92rem;text-align:center}
 </style>
 </head>
 <body>
 
 <canvas id="wall" aria-hidden="true"></canvas>
 
-<div class="cloakbar" id="cloakBar" hidden>Click anywhere to open Eye of Obscura in about:blank</div>
+<div class="cloakbar" id="cloakBar" hidden>Click anywhere to open in about:blank.<br>Allow pop-ups for this site and it opens instantly every time.</div>
 
 <div class="corner">
   <button class="round" type="button" data-action="blank" aria-label="Open in an about:blank tab" title="Open in about:blank">
@@ -167,10 +194,11 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
     </div>
 
     <div class="tile-wrap">
-      <button class="tile" id="gamesBtn" type="button">
+      <button class="tile" id="gamesBtn" type="button" aria-haspopup="true" aria-expanded="false">
         <svg viewBox="0 0 24 24"><path d="M6.5 8h11a4.5 4.5 0 0 1 4.4 5.4l-.8 4a2.4 2.4 0 0 1-4 1.3L14 16.5h-4l-3.1 2.2a2.4 2.4 0 0 1-4-1.3l-.8-4A4.5 4.5 0 0 1 6.5 8z"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="15.5" cy="11.5" r=".6"/><circle cx="17.5" cy="13.5" r=".6"/></svg>
         <span>Games</span>
       </button>
+      <div class="menu" id="gamesMenu" role="menu"></div>
     </div>
 
     <div class="tile-wrap">
@@ -206,7 +234,7 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 <section class="viewer" id="viewer" aria-label="Browsing">
   <div class="tabs">
     <div id="tabList" role="tablist" aria-label="Open tabs"></div>
-    <button class="addtab" id="addTabBtn" type="button" aria-label="New tab" title="New tab">+</button>
+    <button class="addtab" id="addTabBtn" type="button" aria-label="New tab" title="New tab (Alt+T)">+</button>
   </div>
   <div class="bar">
     <button id="homeBtn" type="button" aria-label="Back to Eye of Obscura" title="Home"><svg viewBox="0 0 24 24"><path d="M2 12Q12 3 22 12Q12 21 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
@@ -219,6 +247,7 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
     </button>
   </div>
   <div class="stage" id="stage">
+    <div class="progress" id="progress"></div>
     <div class="notice" id="blank">
       <div class="blankwrap">
       <svg class="eye blankeye" id="eye2" viewBox="0 0 240 140" role="img" aria-label="Eye of Obscura logo">
@@ -270,11 +299,19 @@ form.search button{border:0;background:var(--gold);color:var(--on-accent);font-w
 
 <script>
 /* ---- Edit these ---- */
+/* Sites move around. If one stops loading, change its address here. */
 const MOVIES = [
   { name: "Soap2Day", url: "https://soap2day.day" },
-  { name: "OnlyFlix", url: "https://onlyflix.to" }
+  { name: "OnlyFlix", url: "https://onlyflix.to" },
+  { name: "MyFlixer", url: "https://myflixer.to" },
+  { name: "Cineby",   url: "https://www.cineby.app" }
 ];
-const GAMES_URL = "https://sites.google.com/view/classroom6x/";
+const GAMES = [
+  { name: "Classroom 6x",    url: "https://sites.google.com/view/classroom6x/" },
+  { name: "Quiz 30",         url: "https://quiz-30.github.io" },
+  { name: "GN Math",         url: "https://gn-math.dev" },
+  { name: "Cool Math Games", url: "https://www.coolmathgames.com" }
+];
 const SEARCH_URL = "https://duckduckgo.com/?q=";
 const LINKS = {
   youtube: "https://www.youtube.com",
@@ -300,17 +337,39 @@ function createTab(){
   const iframe = document.createElement("iframe");
   iframe.title = "Proxied page";
   iframe.setAttribute("allow", "fullscreen; autoplay");
+  const tab = { id: nextId++, iframe, frame: null, url: "", title: "New tab", failed: false, loading: false, timer: 0 };
+  iframe.addEventListener("load", () => onTabLoaded(tab));
   $("stage").insertBefore(iframe, $("blank"));
-  const tab = { id: nextId++, iframe, frame: null, url: "", title: "New tab", failed: false };
   tabs.push(tab);
   switchTab(tab.id);
   return tab;
+}
+
+/* Loading bar: on while a page loads, off when it finishes (or after 15 seconds) */
+function startLoading(tab){
+  tab.loading = true;
+  clearTimeout(tab.timer);
+  tab.timer = setTimeout(() => { tab.loading = false; updateStage(); }, 15000);
+}
+
+/* When a page finishes loading, use its real title for the tab */
+function onTabLoaded(tab){
+  if (!tab.url) return;
+  clearTimeout(tab.timer);
+  tab.loading = false;
+  try {
+    const t = (tab.iframe.contentDocument.title || "").trim();
+    if (t && t !== "about:blank") tab.title = t.length > 40 ? t.slice(0, 40) + "\u2026" : t;
+  } catch (e) {}
+  renderTabs();
+  updateStage();
 }
 
 function navigate(tab, url){
   tab.url = url;
   tab.title = hostOf(url);
   tab.failed = false;
+  startLoading(tab);
   const sj = window.scramjet;
   if (sj && typeof sj.createFrame === "function") {
     if (!tab.frame) tab.frame = sj.createFrame(tab.iframe);
@@ -319,6 +378,7 @@ function navigate(tab, url){
     tab.iframe.src = sj.encodeUrl(url);
   } else {
     tab.failed = true;
+    tab.loading = false;
   }
   renderTabs();
   updateStage();
@@ -335,6 +395,7 @@ function switchTab(id){
 function closeTab(id){
   const i = tabs.findIndex(t => t.id === id);
   if (i < 0) return;
+  clearTimeout(tabs[i].timer);
   tabs[i].iframe.remove();
   tabs.splice(i, 1);
   if (!tabs.length) { activeId = null; renderTabs(); updateStage(); goHome(); return; }
@@ -370,6 +431,7 @@ function updateStage(){
   $("blank").classList.toggle("on", !!active && !active.url);
   $("notice").classList.toggle("on", !!active && active.failed);
   $("addr").value = active ? active.url : "";
+  $("progress").classList.toggle("on", !!active && active.loading && !active.failed);
 }
 
 /* Open a URL. From the home screen it gets its own tab (a blank tab is reused);
@@ -403,28 +465,72 @@ $("addr").addEventListener("keydown", e => {
   if (e.key === "Enter") { const url = toUrl($("addr").value); if (url) openUrl(url, false); }
 });
 $("homeBtn").addEventListener("click", goHome);
-$("reloadBtn").addEventListener("click", () => { const t = getTab(activeId); if (t && t.url) navigate(t, t.url); });
+$("reloadBtn").addEventListener("click", () => {
+  const t = getTab(activeId);
+  if (!t || !t.url) return;
+  try {
+    startLoading(t); updateStage();
+    t.iframe.contentWindow.location.reload(); /* reloads the page you are on, not the first one you opened */
+  } catch (e) { navigate(t, t.url); }
+});
 $("addTabBtn").addEventListener("click", () => { $("viewer").classList.add("on"); createTab(); });
-$("gamesBtn").addEventListener("click", () => openUrl(GAMES_URL, true));
 document.querySelectorAll("[data-link]").forEach(b => {
   b.addEventListener("click", () => openUrl(LINKS[b.dataset.link], true));
 });
 
-const menu = $("moviesMenu"), moviesBtn = $("moviesBtn");
-MOVIES.forEach(m => {
-  const b = document.createElement("button");
-  b.type = "button"; b.setAttribute("role", "menuitem"); b.textContent = m.name;
-  b.addEventListener("click", () => { closeMenu(); openUrl(m.url, true); });
-  menu.appendChild(b);
+/* Dropdown menus (Movies, Games). Mouse, and keyboard: arrow keys, Escape. */
+const menus = [];
+function closeMenus(){ menus.forEach(m => m.close()); }
+function setupMenu(btn, menuEl, items){
+  items.forEach(m => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "menuitem"); b.textContent = m.name;
+    b.addEventListener("click", () => { closeMenus(); openUrl(m.url, true); });
+    menuEl.appendChild(b);
+  });
+  const api = {
+    close(){ menuEl.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); },
+    open(){
+      closeMenus();
+      menuEl.classList.remove("up");
+      menuEl.classList.add("open");
+      btn.setAttribute("aria-expanded", "true");
+      /* no room below? open upward instead */
+      const r = menuEl.getBoundingClientRect(), b = btn.getBoundingClientRect();
+      if (r.bottom > innerHeight - 12 && b.top - r.height - 10 > 8) menuEl.classList.add("up");
+    }
+  };
+  const first = () => menuEl.querySelector("button");
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    if (menuEl.classList.contains("open")) { api.close(); return; }
+    api.open();
+    if (e.detail === 0) first().focus(); /* opened with the keyboard */
+  });
+  btn.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); api.open(); first().focus(); }
+  });
+  menuEl.addEventListener("keydown", e => {
+    const list = [...menuEl.querySelectorAll("button")];
+    const i = list.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); list[(i + 1) % list.length].focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); list[(i - 1 + list.length) % list.length].focus(); }
+    else if (e.key === "Escape") { e.stopPropagation(); api.close(); btn.focus(); }
+  });
+  menus.push(api);
+}
+setupMenu($("moviesBtn"), $("moviesMenu"), MOVIES);
+setupMenu($("gamesBtn"), $("gamesMenu"), GAMES);
+document.addEventListener("click", closeMenus);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenus(); });
+
+/* Keyboard shortcuts while browsing: Alt+T new tab, Alt+W close tab, Alt+L address bar */
+document.addEventListener("keydown", e => {
+  if (!e.altKey || e.ctrlKey || e.metaKey || !$("viewer").classList.contains("on")) return;
+  if (e.code === "KeyT") { e.preventDefault(); createTab(); }
+  else if (e.code === "KeyW") { e.preventDefault(); if (activeId) closeTab(activeId); }
+  else if (e.code === "KeyL") { e.preventDefault(); $("addr").focus(); $("addr").select(); }
 });
-function closeMenu(){ menu.classList.remove("open"); moviesBtn.setAttribute("aria-expanded", "false"); }
-moviesBtn.addEventListener("click", e => {
-  e.stopPropagation();
-  const open = menu.classList.toggle("open");
-  moviesBtn.setAttribute("aria-expanded", String(open));
-});
-document.addEventListener("click", closeMenu);
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
 
 /* Full screen */
 const canFs = !!document.documentElement.requestFullscreen;
@@ -436,30 +542,9 @@ document.addEventListener("fullscreenchange", () => {
   document.documentElement.setAttribute("data-fs", document.fullscreenElement ? "on" : "off");
 });
 
-/* Open this page inside an about:blank tab */
-function openBlank(){
-  const w = window.open("", "obscura-cloak");
-  if (!w) return false;
-  try { w.focus(); } catch (e) {}
-  const d = w.document;
-  d.open();
-  d.write('<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style></head><body></body></html>');
-  d.close();
-  const f = d.createElement("iframe");
-  f.src = location.href;
-  f.setAttribute("allow", "fullscreen; autoplay");
-  d.body.appendChild(f);
-  return true;
-}
-
-/* Auto-open in about:blank every time this page loads or reloads.
-   Set AUTO_CLOAK to false to turn it off. Add ?nocloak to the address to skip it once. */
-const AUTO_CLOAK = true;
-function autoCloak(){
-  if (!AUTO_CLOAK || window.self !== window.top) return;
-  if (/[?&]nocloak\b/.test(location.search)) return;
-  if (openBlank()) return;
-  /* The browser blocked it, so the first click or key press opens it instead */
+/* If the browser blocked the instant pop-up, the first click or key press opens it */
+function autoCloakFallback(){
+  if (window.__cloaked !== false) return;
   const bar = document.getElementById("cloakBar");
   bar.hidden = false;
   function go(e){
@@ -564,7 +649,7 @@ function wallFrame(ms){
 addEventListener("resize", () => { sizeWall(); if (still) wallFrame(0); });
 document.addEventListener("pointermove", e => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; });
 sizeWall(); requestAnimationFrame(wallFrame);
-autoCloak();
+autoCloakFallback();
 </script>
 </body>
 </html>
